@@ -109,3 +109,31 @@ class RequestHandler(BaseHTTPRequestHandler):
         except IOError as msg:
             self.handle_error(f"Could not read file: {msg}", status=500)
 
+
+    # Create a user-friendly error page and send correct HTTP code
+    def handle_error(self, msg, status=404):
+        content = self.Error_Page.format(path=self.path, msg=msg)
+        self.send_content(content.encode("utf-8"), status=status)
+
+
+
+    # Send any content to the browser
+    def send_content(self, content, status=200):
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+# Run server
+
+if __name__ == '__main__':
+    serverAddress = ('', 8080)
+    server = HTTPServer(serverAddress, RequestHandler)
+    print('server running on http://localhost:8080/')
+    print('press Ctrl-C to stop it')
+    try:      
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\n Shutting down server.")
+        server.server_close()
