@@ -73,6 +73,33 @@ class RequestHandler(BaseHTTPRequestHandler):
         except IOError as e:
             self.send_error_page(500, f"I/O Error: {e}")
             return
+        
+        # Error handling page
+        Error_Page = """\
+            <html>
+            <body>
+            <h1>Error accessing {path}</h1>
+            <p>{msg}</p>
+            </body>
+            </html>
+            """
+
+        def handle_error(self, msg):
+            content = self.Error_Page.format(path=self.path, msg=msg)
+            self.send_content(content)
+            
+        # Handle unknown objects.
+        def handle_error(self, msg):
+            content = self.Error_Page.format(path=self.path, msg=msg)
+            self.send_content(content, 404)
+
+         # Send actual content.
+        def send_content(self, content, status=200):
+            self.send_response(status)
+            self.send_header("Content-type", "text/html")
+            self.send_header("Content-Length", str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
 
 
 
@@ -107,3 +134,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\n Shutting down server.")
         server.server_close()
+
