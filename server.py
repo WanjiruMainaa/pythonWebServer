@@ -71,14 +71,14 @@ class case_directory_no_index_file(base_case):
     def act(self, handler):
         handler.list_dir(handler.full_path)
 
-class case_always_fail(object):
-    '''Base case if nothing else worked.'''
+class case_always_fail(base_case):
+    """Base case if nothing else worked."""
 
     def test(self, handler):
         return True
 
     def act(self, handler):
-        raise Exception("Unknown object '{0}'".format(handler.path))
+        raise ServerException("Unknown object '{0}'".format(handler.path))
 
 #--------------------------------------------------------
 class ServerException(Exception):
