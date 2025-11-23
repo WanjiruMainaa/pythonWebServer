@@ -173,91 +173,81 @@ class ServerException(Exception):
     pass
 
 class RequestHandler(BaseHTTPRequestHandler):
+    """
+    If the requested path maps to a file, that file is served.
+    If anything goes wrong, an error page is constructed.
+    """
 
-     # Default HTML page
-    Default_Page = """\
-        <html>
-        <body>
-        <p>Hello, web!</p>
-        </body>
-        </html>
-        """
+    Cases = [case_no_file(),
+             case_existing_file(),
+             case_always_fail()]
 
-
-    # HTML template for error page
+    # How to display an error.
     Error_Page = """\
-        <html>
-        <body>
-        <h1>Error accessing {path}</h1>
-        <p>{msg}</p>
-        </body>
-        </html>
-        """
-    
+<html>
+<body>
+<h1>Error accessing {path}</h1>
+<p>{msg}</p>
+</body>
+</html>
+"""
 
-    # Main GET handler
+    # How to display a directory listing.
+    Listing_Page = '''\
+<html>
+<body>
+<ul>
+{0}
+</ul>
+</body>
+</html>
+'''
+
+    # Classify and handle request.
     def do_GET(self):
         try:
+            # Figure out what exactly is being requested.
+            self.full_path = os.getcwd() + self.path
 
-            if self.path == "/" or self.path == "/index.html":
-                self.send_content(self.Default_Page.encode("utf-8"), status=200)
-                return
+            # Figure out how to handle it.
+            for case in self.Cases:
+                if case.test(self):
+                    case.act(self)
+                    break
 
-            # Build safe file path
-            root = os.getcwd()
-            clean_path = os.path.normpath(self.path.lstrip("/"))
-            full_path = os.path.join(root, clean_path)
-
-            # If file does not exist
-            if not os.path.exists(full_path):
-                self.handle_error("File not found.")
-                return
-
-            # If it's a file, serve it
-            if os.path.isfile(full_path):
-                return self.handle_file(full_path)
-
-            # If it is anything else
-            raise ServerException(f"Unknown object '{self.path}'")
-        
-        # errors in server logic
-        except ServerException as msg:
-            self.handle_error(f"Internal server error: {msg}", status=500)
-            
-         # Any unexpected issue
+        # Handle errors.
         except Exception as msg:
-            self.handle_error(f"Unexpected error: {msg}", status=500)
+            self.handle_error(msg)
 
-    # Serve an actual file from disk
-    def handle_file(self, full_path):
-        try:
-            # Open in binary mode
-            with open(full_path, "rb") as f:
-                content = f.read()
-
-            # Send file bytes
-            self.send_content(content, status=200)
-
-        except IOError as msg:
-            self.handle_error(f"Could not read file: {msg}", status=500)
-
-
-    # Create a user-friendly error page and send correct HTTP code
-    def handle_error(self, msg, status=404):
+    # Handle unknown objects.
+    def handle_error(self, msg):
         content = self.Error_Page.format(path=self.path, msg=msg)
-        self.send_content(content.encode("utf-8"), status=status)
+        self.send_content(content, 404)
 
-
-
-    # Send any content to the browser
+    # Send actual content.
     def send_content(self, content, status=200):
         self.send_response(status)
-        self.send_header("Content-Type", "text/html")
+        self.send_header("Content-type", "text/html")
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
         self.wfile.write(content)
 
-# Run server
+    def list_dir(self, full_path):
+        """Generate a directory listing."""
+        try:
+            entries = os.listdir(full_path)
+            bullets = ['<li><a href="{0}">{0}</a></li>'.format(e)
+                      for e in entries if not e.startswith('.')]
+            page = self.Listing_Page.format('\n'.join(bullets))
+            self.send_content(page)
+        except OSError as msg:
+            msg = "'{0}' cannot be listed: {1}".format(self.path, msg)
+            self.handle_error(msg)
+
+# CGI script handling here
+
+
+#----------------------------------------------------------------------
 
 if __name__ == '__main__':
     serverAddress = ('', 8080)
