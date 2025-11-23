@@ -95,6 +95,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     Cases = [case_no_file(),
              case_existing_file(),
+             case_directory_index_file(),
+             case_directory_no_index_file(),
              case_always_fail()]
 
     # How to display an error.
