@@ -6,6 +6,7 @@ class ServerException(Exception):
     """Exception for internal server errors."""
     pass
 
+# Base case handler (bill)
 class base_case(object):
     """Parent for case handlers."""
 
@@ -27,6 +28,7 @@ class base_case(object):
     def act(self, handler):
         assert False, 'Not implemented.'
 
+# No file handling (bill)
 class case_no_file(base_case):
     """File or directory does not exist."""
 
@@ -38,6 +40,7 @@ class case_no_file(base_case):
     
 # CGI script handling here
 
+# Existing file handling (bill)
 class case_existing_file(base_case):
     """File exists."""
 
@@ -75,6 +78,7 @@ class case_directory_no_index_file(base_case):
     def act(self, handler):
         handler.list_dir(handler.full_path)
 
+# Always fail (bill)
 class case_always_fail(base_case):
     """Base case if nothing else worked."""
 
