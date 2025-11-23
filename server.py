@@ -95,6 +95,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(content)
 
+    # List directory content. (david)
     def list_dir(self, full_path):
         """Generate a directory listing."""
         try:
