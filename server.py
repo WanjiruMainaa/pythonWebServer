@@ -5,6 +5,7 @@ import os
 class RequestHandler(BaseHTTPRequestHandler):
 
     """Handle HTTP requests by returning a fixed 'page'."""
+    
 
     def do_GET(self):
         """Serve files based on self.path using os.getcwd(), existence check, and file check."""
@@ -73,6 +74,33 @@ class RequestHandler(BaseHTTPRequestHandler):
         except IOError as e:
             self.send_error_page(500, f"I/O Error: {e}")
             return
+        
+        # Error handling page
+        Error_Page = """\
+            <html>
+            <body>
+            <h1>Error accessing {path}</h1>
+            <p>{msg}</p>
+            </body>
+            </html>
+            """
+
+        def handle_error(self, msg):
+            content = self.Error_Page.format(path=self.path, msg=msg)
+            self.send_content(content)
+            
+        # Handle unknown objects.
+        def handle_error(self, msg):
+            content = self.Error_Page.format(path=self.path, msg=msg)
+            self.send_content(content, 404)
+
+         # Send actual content.
+        def send_content(self, content, status=200):
+            self.send_response(status)
+            self.send_header("Content-type", "text/html")
+            self.send_header("Content-Length", str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
 
 
 
@@ -93,6 +121,61 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(pages)))
             self.end_headers()
             self.wfile.write(pages)
+
+        def do_GET(self):
+            try:
+
+                # Figure out what exactly is being requested.
+                self.full_path = os.getcwd() + self.path
+
+                # Figure out how to handle it.
+                for case in self.Cases:
+                    handler = case()
+                    if handler.test(self):
+                        handler.act(self)
+                        break
+
+            # Handle errors.
+            except Exception as msg:
+                self.handle_error(msg)
+
+class case_no_file(object):
+    '''File or directory does not exist.'''
+
+    def test(self, handler):
+        return not os.path.exists(handler.full_path)
+
+    def act(self, handler):
+        raise Exception("'{0}' not found".format(handler.path))
+
+
+class case_existing_file(object):
+    '''File exists.'''
+
+    def test(self, handler):
+        return os.path.isfile(handler.full_path)
+
+    def act(self, handler):
+        handler.handle_file(handler.full_path)
+
+class case_always_fail(object):
+    '''Base case if nothing else worked.'''
+
+    def test(self, handler):
+        return True
+
+    def act(self, handler):
+        raise Exception("Unknown object '{0}'".format(handler.path))
+
+class RequestHandler(BaseHTTPRequestHandler):
+    '''
+    If the requested path maps to a file, that file is served.
+    If anything goes wrong, an error page is constructed.
+    '''
+
+    Cases = [case_no_file(),
+             case_existing_file(),
+             case_always_fail()]
 
 
 #----------------------------------------------------------------------
