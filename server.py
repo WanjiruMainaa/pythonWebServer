@@ -3,39 +3,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
 
 class RequestHandler(BaseHTTPRequestHandler):
-
-    """Handle HTTP requests by returning a fixed 'page'."""
     
-
-    def do_GET(self):
-        """Serve files based on self.path using os.getcwd(), existence check, and file check."""
-        try:
-            # 1. Get current working directory
-            current_dir = os.getcwd()
-
-            # 2. Build  file path from request path
-            req_path = self.path.lstrip("/")  # remove leading "/"
-            file_path = os.path.join(current_dir, req_path)
-
-            # Default to index.html if root requested
-            if self.path == "/" or self.path.strip() == "":
-                file_path = os.path.join(current_dir, "index.html")
-
-            # 3. Check if file exists
-            if not os.path.exists(file_path):
-                self.send_error_page(404, "File does not exist")
-                return
-
-            # 4. Check if it is a file
-            if not os.path.isfile(file_path):
-                self.send_error_page(404, "Path is not a file")
-                return
-
-            # 5. Serve the file
-            self.handle_file(file_path)
-
-        except IOError as e:
-            self.send_error_page(500, f"I/O Error: {e}")
 
     def handle_file(self, full_path):
         """Read file in binary mode and send it with proper headers."""
@@ -121,23 +89,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(pages)))
             self.end_headers()
             self.wfile.write(pages)
-
-        def do_GET(self):
-            try:
-
-                # Figure out what exactly is being requested.
-                self.full_path = os.getcwd() + self.path
-
-                # Figure out how to handle it.
-                for case in self.Cases:
-                    handler = case()
-                    if handler.test(self):
-                        handler.act(self)
-                        break
-
-            # Handle errors.
-            except Exception as msg:
-                self.handle_error(msg)
 
 class case_no_file(object):
     '''File or directory does not exist.'''
