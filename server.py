@@ -2,6 +2,10 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
 
+class ServerException(Exception):
+    """Exception for internal server errors."""
+    pass
+
 class base_case(object):
     """Parent for case handlers."""
 
@@ -81,9 +85,7 @@ class case_always_fail(base_case):
         raise ServerException("Unknown object '{0}'".format(handler.path))
 
 #--------------------------------------------------------
-class ServerException(Exception):
-    """Exception for internal server errors."""
-    pass
+
 
 class RequestHandler(BaseHTTPRequestHandler):
     """
