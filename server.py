@@ -23,14 +23,14 @@ class base_case(object):
     def act(self, handler):
         assert False, 'Not implemented.'
 
-class case_no_file(object):
-    '''File or directory does not exist.'''
+class case_no_file(base_case):
+    """File or directory does not exist."""
 
     def test(self, handler):
         return not os.path.exists(handler.full_path)
 
     def act(self, handler):
-        raise Exception("'{0}' not found".format(handler.path))
+        raise ServerException("'{0}' not found".format(handler.path))
 
 
 class case_existing_file(object):
