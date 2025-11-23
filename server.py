@@ -167,30 +167,6 @@ class case_always_fail(object):
     def act(self, handler):
         raise Exception("Unknown object '{0}'".format(handler.path))
 
-class RequestHandler(BaseHTTPRequestHandler):
-    '''
-    If the requested path maps to a file, that file is served.
-    If anything goes wrong, an error page is constructed.
-    '''
-
-    Cases = [case_no_file(),
-             case_existing_file(),
-             case_always_fail()]
-
-
-#----------------------------------------------------------------------
-
-if __name__ == '__main__':
-    serverAddress = ('', 8080)
-    server = HTTPServer(serverAddress, RequestHandler)
-    print('server running on http://localhost:8080/')
-    print('press Ctrl-C to stop it')
-    try:      
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\n Shutting down server.")
-        server.server_close()
-
 #--------------------------------------------------------
 class ServerException(Exception):
     """Exception for internal server errors."""
