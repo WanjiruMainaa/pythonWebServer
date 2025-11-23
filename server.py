@@ -31,16 +31,17 @@ class case_no_file(base_case):
 
     def act(self, handler):
         raise ServerException("'{0}' not found".format(handler.path))
+    
+# CGI script handling here
 
-
-class case_existing_file(object):
-    '''File exists.'''
+class case_existing_file(base_case):
+    """File exists."""
 
     def test(self, handler):
         return os.path.isfile(handler.full_path)
 
     def act(self, handler):
-        handler.handle_file(handler.full_path)
+        self.handle_file(handler, handler.full_path)
 
 class case_always_fail(object):
     '''Base case if nothing else worked.'''
