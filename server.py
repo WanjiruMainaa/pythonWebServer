@@ -161,7 +161,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     # Handle unknown objects.
     def handle_error(self, msg):
         content = self.Error_Page.format(path=self.path, msg=msg)
-        self.send_content(content, 404)
+        self.send_content(content.encode('utf-8'), 404)
 
     # Send actual content.
     def send_content(self, content, status=200):
@@ -179,7 +179,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             bullets = ['<li><a href="{0}">{0}</a></li>'.format(e)
                       for e in entries if not e.startswith('.')]
             page = self.Listing_Page.format('\n'.join(bullets))
-            self.send_content(page)
+            self.send_content(page.encode('utf-8'))
         except OSError as msg:
             msg = "'{0}' cannot be listed: {1}".format(self.path, msg)
             self.handle_error(msg)
