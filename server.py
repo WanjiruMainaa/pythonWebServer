@@ -45,6 +45,29 @@ class case_root_path(base_case):
 '''
         handler.send_content(page.encode('utf-8'))
 
+# Display request values (Displaying Values section) (issa)
+class case_display_values(base_case):
+    """Display request information in an HTML table.
+    
+    According to the article, this shows values for any request.
+    To use this, place it in the Cases list where you want it checked.
+    Note: If placed early in the list, it will show values for all requests.
+    """
+    
+    def test(self, handler):
+        # Return True to match any request (as shown in the article)
+        # This will show values for all requests, even non-existent files
+        return True
+
+    def act(self, handler):
+        try:
+            page = handler.create_page()
+            handler.send_content(page.encode('utf-8'))
+        except Exception as e:
+            # Debug: if there's an error, show it
+            error_msg = f"Error in case_display_values: {str(e)}"
+            handler.handle_error(error_msg)
+
 # No file handling (bill)
 class case_no_file(base_case):
     """File or directory does not exist."""
@@ -114,7 +137,8 @@ class RequestHandler(BaseHTTPRequestHandler):
     If anything goes wrong, an error page is constructed.
     """
 
-    Cases = [case_root_path(),
+    Cases = [case_display_values(),
+             case_root_path(),
              case_no_file(),
              case_existing_file(),
              case_directory_index_file(),
@@ -138,6 +162,22 @@ class RequestHandler(BaseHTTPRequestHandler):
 <ul>
 {0}
 </ul>
+</body>
+</html>
+'''
+
+    # Page template for displaying request values (Displaying Values section) (issa)
+    Page = '''\
+<html>
+<body>
+<table>
+<tr>  <td>Header</td>         <td>Value</td>          </tr>
+<tr>  <td>Date and time</td>  <td>{date_time}</td>    </tr>
+<tr>  <td>Client host</td>    <td>{client_host}</td>  </tr>
+<tr>  <td>Client port</td>    <td>{client_port}s</td> </tr>
+<tr>  <td>Command</td>        <td>{command}</td>      </tr>
+<tr>  <td>Path</td>           <td>{path}</td>         </tr>
+</table>
 </body>
 </html>
 '''
@@ -183,6 +223,19 @@ class RequestHandler(BaseHTTPRequestHandler):
         except OSError as msg:
             msg = "'{0}' cannot be listed: {1}".format(self.path, msg)
             self.handle_error(msg)
+
+    # Create page with request values (Displaying Values section) (issa)
+    def create_page(self):
+        """Fill in the page template with request values."""
+        values = {
+            'date_time': self.date_time_string(),
+            'client_host': self.client_address[0],
+            'client_port': self.client_address[1],
+            'command': self.command,
+            'path': self.path
+        }
+        page = self.Page.format(**values)
+        return page
 
 # CGI script handling here
 
