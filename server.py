@@ -28,6 +28,23 @@ class base_case(object):
     def act(self, handler):
         assert False, 'Not implemented.'
 
+# Root path handler - returns "Hello, web!" as in the article
+class case_root_path(base_case):
+    """Handle root path with 'Hello, web!' message."""
+
+    def test(self, handler):
+        return handler.path == '/'
+
+    def act(self, handler):
+        page = '''\
+<html>
+<body>
+<p>Hello, web!</p>
+</body>
+</html>
+'''
+        handler.send_content(page.encode('utf-8'))
+
 # No file handling (bill)
 class case_no_file(base_case):
     """File or directory does not exist."""
@@ -97,7 +114,8 @@ class RequestHandler(BaseHTTPRequestHandler):
     If anything goes wrong, an error page is constructed.
     """
 
-    Cases = [case_no_file(),
+    Cases = [case_root_path(),
+             case_no_file(),
              case_existing_file(),
              case_directory_index_file(),
              case_directory_no_index_file(),
