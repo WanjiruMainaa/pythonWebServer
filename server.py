@@ -146,7 +146,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             # Figure out what exactly is being requested.
-            self.full_path = os.getcwd() + self.path
+            self.full_path = os.path.join(os.getcwd(), self.path.lstrip('/'))
 
             # Figure out how to handle it.
             for case in self.Cases:
