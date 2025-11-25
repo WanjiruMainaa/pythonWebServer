@@ -1,7 +1,7 @@
 # import BaseHTTPServer
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
-
+import subprocess
 class ServerException(Exception):
     """Exception for internal server errors."""
     pass
@@ -60,6 +60,7 @@ class case_display_values(base_case):
         return True
 
     def act(self, handler):
+        print(f"debug: {handler.path}")
         try:
             page = handler.create_page()
             handler.send_content(page.encode('utf-8'))
@@ -78,7 +79,16 @@ class case_no_file(base_case):
     def act(self, handler):
         raise ServerException("'{0}' not found".format(handler.path))
     
-# CGI script handling here
+# CGI script handling here(Wanjiru)
+
+class case_cgi_file(base_case):
+     
+     def test(self, handler):
+        return os.path.isfile(handler.full_path) and \
+               handler.full_path.endswith('.py')
+
+     def act(self, handler):
+        handler.run_cgi(handler.full_path)
 
 # Existing file handling (bill)
 class case_existing_file(base_case):
@@ -137,9 +147,11 @@ class RequestHandler(BaseHTTPRequestHandler):
     If anything goes wrong, an error page is constructed.
     """
 
+
     Cases = [case_display_values(),
              case_root_path(),
              case_no_file(),
+             case_cgi_file(),
              case_existing_file(),
              case_directory_index_file(),
              case_directory_no_index_file(),
@@ -150,7 +162,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 <html>
 <body>
 <h1>Error accessing {path}</h1>
-<p>{msg}</p>
+<p>{msg}</p>cmd = "python " + full_path
+        child_stdin, child_stdout = os.popen2(cmd)
+        child_stdin.close()
+        data = child_stdout.read()
+        child_stdout.close()
+        self.send_content(data)
 </body>
 </html>
 """
@@ -181,6 +198,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 </body>
 </html>
 '''
+
 
     # Classify and handle request.
     def do_GET(self):
@@ -237,7 +255,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         page = self.Page.format(**values)
         return page
 
-# CGI script handling here
+# CGI script handling here(Wanjiru)
+    def run_cgi(self, full_path):
+        cmd = "python " + full_path
+        child_stdin, child_stdout = os.popen2(cmd)
+        child_stdin.close()
+        data = child_stdout.read()
+        child_stdout.close()
+        self.send_content(data)
 
 
 #----------------------------------------------------------------------
