@@ -82,6 +82,7 @@ class case_no_file(base_case):
 # CGI script handling here(Wanjiru)
 
 class case_cgi_file(base_case):
+     
      def test(self, handler):
         return os.path.isfile(handler.full_path) and \
                handler.full_path.endswith('.py')
@@ -146,21 +147,6 @@ class RequestHandler(BaseHTTPRequestHandler):
     If anything goes wrong, an error page is constructed.
     """
 
-    def run_cgi(self, full_path):
-        try:
-            result =  subprocess.run()
-            ['python', full_path]
-            capture_output=True
-            text=True
-            timeout=5
-            
-            
-            self.send_content(result.stdout.encode('utf-8'))
-        except subprocess.TimeoutExpired:
-            self.handle_error("Script execution time out")
-        except Exception as e:
-            self.handle_error("UError executing script: {0}".format(str(e)))
-
 
     Cases = [case_display_values(),
              case_root_path(),
@@ -176,7 +162,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 <html>
 <body>
 <h1>Error accessing {path}</h1>
-<p>{msg}</p>
+<p>{msg}</p>cmd = "python " + full_path
+        child_stdin, child_stdout = os.popen2(cmd)
+        child_stdin.close()
+        data = child_stdout.read()
+        child_stdout.close()
+        self.send_content(data)
 </body>
 </html>
 """
@@ -206,7 +197,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 </table>
 </body>
 </html>
-'''CG
+'''
 
 
     # Classify and handle request.
@@ -264,7 +255,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         page = self.Page.format(**values)
         return page
 
-# CGI script handling here
+# CGI script handling here(Wanjiru)
+    def run_cgi(self, full_path):
+        cmd = "python " + full_path
+        child_stdin, child_stdout = os.popen2(cmd)
+        child_stdin.close()
+        data = child_stdout.read()
+        child_stdout.close()
+        self.send_content(data)
 
 
 #----------------------------------------------------------------------
